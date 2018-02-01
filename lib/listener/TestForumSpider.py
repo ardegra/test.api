@@ -23,25 +23,14 @@ class TestForumSpider:
       result.update({"postList": r.json()["postList"]})
       result.update({"firstPostId": page.select(xpath["post"]["firstPostId"]).text()})
       
-      try:
-        last_page = grab.make_url_absolute(page.select(xpath["thread"]["lastPage"]).attr("href"))
-        result.update({"hasLastPage": True})
-        
-        page = grab.go(last_page)
-        try:
-          prev_page = grab.make_url_absolute(page.select(xpath["thread"]["prevPage"]).attr("href"))
-          result.update({"hasPrevPage": True})
-        except weblib.error.DataNotFound:
-          result.update({"hasPrevPage": False})
-      except weblib.error.DataNotFound:
-        result.update({"hasLastPage": False})
+      api_url = "{}/spider/forum/extract/category/lastPageUrl".format(Config.BASE_EXTRACT_API)
+      r       = requests.post(api_url, json={"xpath": xpath, "url": url})
+      result.update({"hasLastPage": True if r.json()["lastPageUrl"] is not None else False})
       
-      page = grab.go(url)
-      try:
-        grab.make_url_absolute(page.select(xpath["thread"]["nextPage"]).attr("href"))
-        result.update({"hasNextPage": True})
-      except weblib.error.DataNotFound:
-        result.update({"hasNextPage": False})
+      if r.json()["lastPageUrl"] is not None:
+        api_url = "{}/spider/forum/extract/category/prevPageUrl".format(Config.BASE_EXTRACT_API)
+        r       = requests.post(api_url, json={"xpath": xpath, "url": r.json()["lastPageUrl"]})
+        result.update({"hasPrevPage": True if r.json()["prevPageUrl"] is not None else False})
       return result
 
     def _thread_test(self, url=None, xpath=None):
