@@ -66,7 +66,8 @@ class TestForumSpider:
         page      = grab.go(grab.make_url_absolute(last_page))
         prev_page = page.select(xpath["category"]["prevPage"]).attr("href")
         result.update({"hasPrevPage": True})
-      except weblib.error.DataNotFound:
+      except weblib.error.DataNotFound as err:
+        print("[TestForumSpider] XPATH error: {}".format(str(err)))
         result.update({"hasLastPage": False})
         result.update({"hasPrevPage": False})
       return result
