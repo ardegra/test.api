@@ -59,8 +59,10 @@ class TestForumSpider:
         
       try:
         last_page = page.select(xpath["category"]["lastPage"]).attr("href")
+        last_page = grab.make_url_absolute(last_page)
         result.update({"hasLastPage": True})
         
+        print("[TestForumSpider] Going to last_page: {}".format(last_page))
         page      = grab.go(grab.make_url_absolute(last_page))
         prev_page = page.select(xpath["category"]["prevPage"]).attr("href")
         result.update({"hasPrevPage": True})
