@@ -62,14 +62,17 @@ class TestForumSpider:
         last_page = grab.make_url_absolute(last_page)
         result.update({"hasLastPage": True})
         
-        print("[TestForumSpider] Going to last_page: {}".format(last_page))
-        page      = grab.go(grab.make_url_absolute(last_page))
-        prev_page = page.select(xpath["category"]["prevPage"]).attr("href")
-        result.update({"hasPrevPage": True})
+        try:
+          print("[TestForumSpider] Going to last_page: {}".format(last_page))
+          page      = grab.go(grab.make_url_absolute(last_page))
+          prev_page = page.select(xpath["category"]["prevPage"]).attr("href")
+          result.update({"hasPrevPage": True})
+        except weblib.error.DataNotFound as err:
+          print("[TestForumSpider] XPATH error: {}".format(str(err)))
+          result.update({"hasPrevPage": False})
       except weblib.error.DataNotFound as err:
         print("[TestForumSpider] XPATH error: {}".format(str(err)))
         result.update({"hasLastPage": False})
-        result.update({"hasPrevPage": False})
       return result
 
     def on_post(self, req, res):
