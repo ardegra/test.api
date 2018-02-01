@@ -64,7 +64,7 @@ class TestForumSpider:
         
         try:
           print("[TestForumSpider] Going to last_page: {}".format(last_page))
-          page      = grab.go(grab.make_url_absolute(last_page))
+          page      = grab.go(last_page)
           prev_page = page.select(xpath["category"]["prevPage"]).attr("href")
           result.update({"hasPrevPage": True})
         except weblib.error.DataNotFound as err:
