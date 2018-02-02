@@ -14,30 +14,23 @@ class TestForumSpider:
       assert url is not None, "url is not defined."
       assert xpath is not None, "xpath is not defined."
         
-      result  = {"postList": [], "lastPageUrl": False, "prevPageUrl": False, "nextPageUrl": False}
+      grab = Grab()
+      page = grab.go(url)
+        
+      result  = {"postList": [], "hasLastPage": False, "hasPrevPage": False, "hasNextPage": False}
       api_url = "{}/spider/forum/extract/post".format(Config.BASE_EXTRACT_API)
       r       = requests.post(api_url, json={"xpath": xpath, "url": url})
       result.update({"postList": r.json()["postList"]})
+      result.update({"firstPostId": page.select(xpath["post"]["firstPostId"]).text()})
       
-      api_url = "{}/spider/forum/extract/post/firstPostId".format(Config.BASE_EXTRACT_API)
+      api_url = "{}/spider/forum/extract/category/lastPageUrl".format(Config.BASE_EXTRACT_API)
       r       = requests.post(api_url, json={"xpath": xpath, "url": url})
-      result.update({"firstPostId": r.json()["firstPostId"]})
+      result.update({"hasLastPage": True if r.json()["lastPageUrl"] is not None else False})
       
-      api_url       = "{}/spider/forum/extract/thread/lastPageUrl".format(Config.BASE_EXTRACT_API)
-      r             = requests.post(api_url, json={"xpath": xpath, "url": url})
-      last_page_url = r.json()["lastPageUrl"]
-      result.update({"lastPageUrl": last_page_url})
-
-      api_url       = "{}/spider/forum/extract/thread/nextPageUrl".format(Config.BASE_EXTRACT_API)
-      r             = requests.post(api_url, json={"xpath": xpath, "url": url})
-      next_page_url = r.json()["nextPageUrl"]
-      result.update({"nextPageUrl": next_page_url})
-
-      if last_page_url is not None:
-        api_url       = "{}/spider/forum/extract/thread/prevPageUrl".format(Config.BASE_EXTRACT_API)
-        r             = requests.post(api_url, json={"xpath": xpath, "url": last_page_url})
-        prev_page_url = r.json()["prevPageUrl"]
-        result.update({"prevPageUrl": prev_page_url})
+      if r.json()["lastPageUrl"] is not None:
+        api_url = "{}/spider/forum/extract/category/prevPageUrl".format(Config.BASE_EXTRACT_API)
+        r       = requests.post(api_url, json={"xpath": xpath, "url": r.json()["lastPageUrl"]})
+        result.update({"hasPrevPage": True if r.json()["prevPageUrl"] is not None else False})
       return result
 
     def _thread_test(self, url=None, xpath=None):
@@ -48,21 +41,27 @@ class TestForumSpider:
       grab = Grab()
       page = grab.go(url)
       
-      result  = {"threadList": [], "lastPageUrl": False, "prevPageUrl": True}
+      result  = {"threadList": [], "hasLastPage": False, "hasPrevPage": True}
       api_url = "{}/spider/forum/extract/threadUrl".format(Config.BASE_EXTRACT_API)
       r       = requests.post(api_url, json={"xpath": xpath, "url": url})
       result["threadList"] = r.json()["threadList"]
         
-      api_url       = "{}/spider/forum/extract/category/lastPageUrl".format(Config.BASE_EXTRACT_API)
-      r             = requests.post(api_url, json={"xpath": xpath, "url": url})
-      last_page_url = r.json()["lastPageUrl"]
-      result.update({"lastPageUrl": last_page_url})
-      
-      if last_page_url is not None:
-        api_url       = "{}/spider/forum/extract/category/prevPageUrl".format(Config.BASE_EXTRACT_API)
-        r             = requests.post(api_url, json={"xpath": xpath, "url": url})
-        prev_page_url = r.json()["prevPageUrl"]
-        result.update({"prevPageUrl": prev_page_url})
+      try:
+        last_page = page.select(xpath["category"]["lastPage"]).attr("href")
+        last_page = grab.make_url_absolute(last_page)
+        result.update({"hasLastPage": True})
+        
+        try:
+          print("[TestForumSpider] Going to last_page: {}".format(last_page))
+          page      = grab.go(last_page)
+          prev_page = page.select(xpath["category"]["prevPage"]).attr("href")
+          result.update({"hasPrevPage": True})
+        except weblib.error.DataNotFound as err:
+          print("[TestForumSpider] XPATH error: {}".format(str(err)))
+          result.update({"hasPrevPage": False})
+      except weblib.error.DataNotFound as err:
+        print("[TestForumSpider] XPATH error: {}".format(str(err)))
+        result.update({"hasLastPage": False})
       return result
 
     def on_post(self, req, res):
