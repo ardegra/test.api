@@ -14,14 +14,14 @@ class TestForumSpider:
       assert url is not None, "url is not defined."
       assert xpath is not None, "xpath is not defined."
         
-      grab = Grab()
-      page = grab.go(url)
-        
       result  = {"postList": [], "lastPageUrl": False, "prevPageUrl": False, "nextPageUrl": False}
       api_url = "{}/spider/forum/extract/post".format(Config.BASE_EXTRACT_API)
       r       = requests.post(api_url, json={"xpath": xpath, "url": url})
       result.update({"postList": r.json()["postList"]})
-      result.update({"firstPostId": page.select(xpath["post"]["firstPostId"]).text()})
+      
+      api_url = "{}/spider/forum/extract/post/firstPostId".format(Config.BASE_EXTRACT_API)
+      r       = requests.post(api_url, json={"xpath": xpath, "url": url})
+      result.update({"firstPostId": r.json()["firstPostId"]})
       
       api_url       = "{}/spider/forum/extract/thread/lastPageUrl".format(Config.BASE_EXTRACT_API)
       r             = requests.post(api_url, json={"xpath": xpath, "url": url})
