@@ -21,7 +21,7 @@ class TestForumSpider:
       api_url = "{}/spider/forum/extract/post".format(Config.BASE_EXTRACT_API)
       r       = requests.post(api_url, json={"xpath": xpath, "url": url})
       result.update({"postList": r.json()["postList"]})
-      result.update({"firstPostId": page.select(xpath["post"]["firstPostId"])}).text()
+      result.update({"firstPostId": page.select(xpath["post"]["firstPostId"]).text()})
       
       # api_url = "{}/spider/forum/extract/post/firstPostId".format(Config.BASE_EXTRACT_API)
       # r       = requests.post(api_url, json={"xpath": xpath, "url": url})
