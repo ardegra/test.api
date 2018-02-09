@@ -8,6 +8,7 @@ from lib.middleware.RequireJSON import RequireJSON
 
 from lib.listener.TestForumSpider import TestForumSpider
 from lib.listener.TestNewsSpider import TestNewsSpider
+from lib.listener.TestEntryDateParser import TestEntryDateParser
 
 cors = CORS(
   allow_all_origins=True,
@@ -19,3 +20,4 @@ api  = falcon.API(middleware=[cors.middleware, RequireJSON(), JSONTranslator()])
 api.add_route("/spider/forum/test", TestForumSpider())
 api.add_route("/spider/news/test", TestNewsSpider())
 
+api.add_route("/parser/entryDate/test", TestEntryDateParser())
