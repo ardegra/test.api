@@ -6,7 +6,7 @@ falcon-cors==1.1.7
 grab==0.6.38
 gunicorn==19.7.1
 idna==2.6
-lxml==4.1.1
+lxml==4.6.2
 pycurl==7.43.0.1
 python-mimeparse==1.6.0
 pytils==0.3
